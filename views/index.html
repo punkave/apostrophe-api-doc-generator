@@ -1,19 +1,5 @@
-<!DOCTYPE html>
-<html lang="en-US">
-<head>
-    <meta charset="utf-8">
-    <meta name="keywords" content="key, words">
-    <meta name="description" content="description">
-    <!-- <link rel="icon" href="favicon.ico" type="image/x-icon"> -->
-   <title>Apostrophe Documentation</title>
-    <style type="text/css">
-    </style>
-</head>
-<body>
-  <h1>Apostrophe Documentation</h1>
-  <h2>Files</h2>
-  {% for file in files %}
-    <h4><a href="files/{{ file | e }}">{{ file | e }}</a></h4>
-  {% endfor %}
-</body>
-</html>
+{% extends "layout.html" %}
+{% block body %}
+  <h4>Select a file at left to browse its methods, API endpoints and nunjucks functions.</h4>
+  <p>{{ global.description | e }}</p>
+{% endblock %}

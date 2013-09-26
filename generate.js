@@ -12,15 +12,21 @@ var markdown = require('markdown').markdown;
 var glob = require('glob');
 var _ = require('underscore');
 
-var env = new nunjucks.Environment();
-var indexTmpl = env.getTemplate(__dirname + '/views/index.html');
-var reportTmpl = env.getTemplate(__dirname + '/views/report.html');
+var env = new nunjucks.Environment(new nunjucks.FileSystemLoader(__dirname + '/views'));
+var indexTmpl = env.getTemplate('index.html');
+var reportTmpl = env.getTemplate('report.html');
+
+var packageInfo = JSON.parse(fs.readFileSync(argv._[0] + '/package.json'));
 
 var files = glob.sync(argv._[0] + '/**/*.js');
 
 files = _.filter(files, function(file) {
   // npm dependencies are not relevant to this module's documentation
   if (file.match(/\/node_modules\//)) {
+    return false;
+  }
+  // Scrapyards of code not in use should not be in docs
+  if (file.match(/\/scraps\//)) {
     return false;
   }
   // browser-side js is not relevant to the server side documentation although
@@ -32,34 +38,51 @@ files = _.filter(files, function(file) {
   if (file.match(/\/test\//)) {
     return false;
   }
+  if (file.match(/\/lib\/tasks\//)) {
+    // Individual command line tasks do not export APIs
+    return false;
+  }
   return true;
 });
 
 var reports = [];
+var generate = [];
 
 _.each(files, function(file) {
-  if (file.match(/\/lib\/tasks\//)) {
-    // Individual command line tasks do not export APIs
-    return;
-  }
   var info = parse(file);
   var report = path.relative(argv._[0], file.replace('.js', '.html'));
   reports.push(report);
   var p = argv._[0] + '/docs/api/files/' + report;
-  ensureDir(path.dirname(p));
-  console.log(info);
-  fs.writeFileSync(p, reportTmpl.render(info));
+  generate.push({ p: p, info: info, report: report });
 });
 
-fs.writeFileSync(argv._[0] + '/docs/api/index.html', indexTmpl.render({ files: reports }));
+_.each(generate, function(item) {
+  item.info.global = { files: reports, name: packageInfo.name, description: packageInfo.description };
+  ensureDir(path.dirname(item.p));
+  var offset = 0;
+  item.info.relative = '../';
+  while (true) {
+    var slash = item.report.indexOf(offset, '/');
+    if (slash !== -1) {
+      item.info.relative += '../';
+      offset = slash + 1;
+    } else {
+      break;
+    }
+  }
+  fs.writeFileSync(item.p, reportTmpl.render(item.info));
+});
+
+fs.writeFileSync(argv._[0] + '/docs/api/index.html', indexTmpl.render({ global: { files: reports, name: packageInfo.name, description: packageInfo.description }, relative: 'files/' }));
 
 function parse(filename) {
   var repoInfo = findRepo(filename);
 
-  info = {
+  var info = {
     methods: [],
     endpoints: [],
     aposLocals: [],
+    file: filename,
     repo: repoInfo
   };
 
@@ -126,6 +149,20 @@ function parse(filename) {
       });
     }
   }
+
+  function compare(a, b) {
+    if (a.name < b.name) {
+      return -1;
+    } else if (a.name > b.name) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  info.methods.sort(compare);
+  info.endpoints.sort(compare);
+  info.aposLocals.sort(compare);
 
   return info;
 }

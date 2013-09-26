@@ -1,25 +1,15 @@
-<!DOCTYPE html>
-<html lang="en-US">
-<head>
-    <meta charset="utf-8">
-    <meta name="keywords" content="key, words">
-    <meta name="description" content="description">
-    <!-- <link rel="icon" href="favicon.ico" type="image/x-icon"> -->
-   <title>Apostrophe Documentation</title>
-    <style type="text/css">
-    </style>
-</head>
-<body>
-  <h1>Apostrophe API Documentation</h1>
+{% extends "layout.html" %}
+{% block relative %}{{ dirname }}{% endblock %}
+{% block body %}
   <h2>{{ name }}</h2>
   <p>{{ description | e }}</p>
   {% if methods.length %}
     <h3>Methods</h3>
     {% for method in methods %}
-      <h4>{{ method.name | e }}(
+      <h4><a class="anchor" href="#method-{{ method.name }}" name="method-{{ method.name }}">{{ method.name }}</a>(
         {%- for parameter in method.parameters -%}
           {{ parameter }}{%- if not loop.last -%}, {% endif -%}
-        {%- endfor -%}) <a target="source" href="https://github.com/{{ repo.owner }}/{{ repo.name }}/blob/master/{{ repo.path }}#L{{ method.line }}">View Source</a>
+        {%- endfor -%}) <a class="view-source" target="source" href="https://github.com/{{ repo.owner }}/{{ repo.name }}/blob/master/{{ repo.path }}#L{{ method.line }}">View Source</a>
       </h4>
       <p>{{ method.docs }}</p>
     {% endfor %}
@@ -27,8 +17,8 @@
   {% if endpoints.length %}
     <h3>Web API Endpoints</h3>
     {% for endpoint in endpoints %}
-      <h4>{{ endpoint.method | e }} {{ endpoint.route | e }}
-        <a target="source" href="https://github.com/{{ repo.owner }}/{{ repo.name }}/blob/master/{{ repo.path }}#L{{ endpoint.line }}">View Source</a>
+      <h4><a class="anchor"  href="#endpoint-{{ endpoint.name }}" name="endpoint-{{ endpoint.name }}">{{ endpoint.method | e }} {{ endpoint.route | e }}</a>
+        <a class="view-source" target="source" href="https://github.com/{{ repo.owner }}/{{ repo.name }}/blob/master/{{ repo.path }}#L{{ endpoint.line }}">View Source</a>
       </h4>
       <p>{{ endpoint.docs }}</p>
     {% endfor %}
@@ -36,13 +26,12 @@
   {% if aposLocals.length %}
     <h3>Nunjucks Functions</h3>
     {% for method in aposLocals %}
-      <h4>{{ method.name | e }}(
+      <h4><a class="anchor"  href="#nunjucks-{{ method.name }}" name="nunjucks-{{ method.name }}">{{ method.name | e }}</a>(
         {%- for parameter in method.parameters -%}
           {{ parameter }}{%- if not loop.last -%}, {% endif -%}
-        {%- endfor -%}) <a target="source" href="https://github.com/{{ repo.owner }}/{{ repo.name }}/blob/master/{{ repo.path }}#L{{ method.line }}">View Source</a>
+        {%- endfor -%}) <a class="view-source" target="source" href="https://github.com/{{ repo.owner }}/{{ repo.name }}/blob/master/{{ repo.path }}#L{{ method.line }}">View Source</a>
       </h4>
       <p>{{ method.docs }}</p>
     {% endfor %}
   {% endif %}
-</body>
-</html>
+{% endblock %}
