@@ -18,6 +18,11 @@ var reportTmpl = env.getTemplate('report.html');
 
 var packageInfo = JSON.parse(fs.readFileSync(argv._[0] + '/package.json'));
 
+if (argv._.length !== 2) {
+  console.error('Usage: node generate.js /path/to/module /path/where/you/want/reports');
+  process.exit(1);
+}
+
 var files = glob.sync(argv._[0] + '/**/*.js');
 
 files = _.filter(files, function(file) {
@@ -52,7 +57,7 @@ _.each(files, function(file) {
   var info = parse(file);
   var report = path.relative(argv._[0], file.replace('.js', '.html'));
   reports.push(report);
-  var p = argv._[0] + '/docs/api/files/' + report;
+  var p = argv._[1] + '/files/' + report;
   generate.push({ p: p, info: info, report: report });
 });
 
@@ -73,7 +78,7 @@ _.each(generate, function(item) {
   fs.writeFileSync(item.p, reportTmpl.render(item.info));
 });
 
-fs.writeFileSync(argv._[0] + '/docs/api/index.html', indexTmpl.render({ global: { files: reports, name: packageInfo.name, description: packageInfo.description }, relative: 'files/' }));
+fs.writeFileSync(argv._[1] + '/index.html', indexTmpl.render({ global: { files: reports, name: packageInfo.name, description: packageInfo.description }, relative: 'files/' }));
 
 function parse(filename) {
   var repoInfo = findRepo(filename);
